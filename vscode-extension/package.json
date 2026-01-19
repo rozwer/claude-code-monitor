@@ -1,0 +1,82 @@
+{
+  "name": "claude-code-monitor",
+  "displayName": "Claude Code Monitor",
+  "description": "Monitor multiple Claude Code sessions with terminal focus support",
+  "version": "1.0.0",
+  "publisher": "claude-code-monitor",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "claude-code-monitor.showDashboard",
+        "title": "Claude Code Monitor: Show Dashboard"
+      },
+      {
+        "command": "claude-code-monitor.focusSession",
+        "title": "Claude Code Monitor: Focus Session"
+      },
+      {
+        "command": "claude-code-monitor.clearSessions",
+        "title": "Claude Code Monitor: Clear All Sessions"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claude-code-monitor",
+          "title": "Claude Code Monitor",
+          "icon": "$(terminal)"
+        }
+      ]
+    },
+    "views": {
+      "claude-code-monitor": [
+        {
+          "id": "claude-code-monitor.sessions",
+          "name": "Sessions"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Claude Code Monitor",
+      "properties": {
+        "claudeCodeMonitor.showNotifications": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show notifications when sessions need attention"
+        },
+        "claudeCodeMonitor.autoFocusOnPermission": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically focus terminal when permission is required"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "biome check src/",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.0"
+  },
+  "dependencies": {
+    "chokidar": "^4.0.0"
+  }
+}
