@@ -1,5 +1,7 @@
 import { flushPendingWrites, updateSession } from '../store/file-store.js';
 import type { HookEvent, HookEventName } from '../types/index.js';
+import { readConfig } from '../utils/config.js';
+import { notify } from '../utils/notify.js';
 
 // Allowed hook event names (whitelist)
 /** @internal */
@@ -73,6 +75,35 @@ export async function handleHookEvent(eventName: string, tty?: string): Promise<
 
   updateSession(event);
 
+  // Send notifications if enabled
+  sendNotificationIfNeeded(event);
+
   // Ensure data is written before process exits (hooks are short-lived processes)
   flushPendingWrites();
+}
+
+/**
+ * Send Windows notification based on event type and config
+ */
+function sendNotificationIfNeeded(event: HookEvent): void {
+  const config = readConfig();
+  if (!config.notifications.enabled) {
+    return;
+  }
+
+  const sessionInfo = event.cwd;
+
+  // Permission prompt notification
+  if (
+    config.notifications.onPermissionPrompt &&
+    event.hook_event_name === 'Notification' &&
+    event.notification_type === 'permission_prompt'
+  ) {
+    notify('permission_prompt', sessionInfo);
+  }
+
+  // Session complete notification
+  if (config.notifications.onSessionComplete && event.hook_event_name === 'Stop') {
+    notify('session_complete', sessionInfo);
+  }
 }
