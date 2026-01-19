@@ -30,7 +30,7 @@ function getTtyFromAncestors(): string | undefined {
         encoding: 'utf-8',
         stdio: ['pipe', 'pipe', 'ignore'],
       }).trim();
-      const isValidTty = ttyName && ttyName !== '??' && ttyName !== '';
+      const isValidTty = ttyName && ttyName !== '?' && ttyName !== '??' && ttyName !== '';
       if (isValidTty) {
         return `/dev/${ttyName}`;
       }
