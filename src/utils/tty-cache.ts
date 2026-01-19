@@ -1,7 +1,8 @@
-import { statSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { MAX_TTY_CACHE_SIZE, TTY_CACHE_TTL_MS } from '../constants.js';
+import { extractPidFromWindowsTtyId, isValidWindowsTtyId } from './platform.js';
 
-// TTY check cache to avoid repeated statSync calls
+// TTY check cache to avoid repeated process checks
 const ttyCache = new Map<string, { alive: boolean; checkedAt: number }>();
 
 /**
@@ -23,8 +24,33 @@ function evictOldestIfNeeded(): void {
 }
 
 /**
- * Check if a TTY device is still alive (exists in filesystem)
- * Results are cached for TTY_CACHE_TTL_MS to avoid repeated stat calls
+ * Check if a Windows process is still running
+ * Uses tasklist command to check process existence
+ */
+function isProcessAlive(pid: number): boolean {
+  // Only run tasklist on actual Windows
+  if (process.platform !== 'win32') {
+    // On non-Windows (e.g., WSL testing), assume alive
+    return true;
+  }
+
+  try {
+    const result = spawnSync('tasklist', ['/FI', `PID eq ${pid}`, '/NH'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    // tasklist returns the process info if found, or "INFO: No tasks are running..."
+    return result.status === 0 && !result.stdout.includes('INFO:');
+  } catch {
+    // If tasklist fails, assume the process is alive to avoid false negatives
+    return true;
+  }
+}
+
+/**
+ * Check if a TTY/session identifier is still alive
+ * For Windows: checks if the parent process is still running
+ * Results are cached for TTY_CACHE_TTL_MS to avoid repeated checks
  * @internal
  */
 export function isTtyAlive(tty: string | undefined): boolean {
@@ -40,12 +66,16 @@ export function isTtyAlive(tty: string | undefined): boolean {
 
   // Check TTY and cache result
   let alive: boolean;
-  try {
-    statSync(tty);
+
+  if (isValidWindowsTtyId(tty)) {
+    // Windows: check if parent process is still running
+    const pid = extractPidFromWindowsTtyId(tty);
+    alive = pid !== undefined && isProcessAlive(pid);
+  } else {
+    // Unknown format: assume alive
     alive = true;
-  } catch {
-    alive = false;
   }
+
   ttyCache.set(tty, { alive, checkedAt: now });
   evictOldestIfNeeded();
   return alive;

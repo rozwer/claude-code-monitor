@@ -24,3 +24,12 @@ export function generateWindowsTtyId(): string {
 export function isValidWindowsTtyId(tty: string): boolean {
   return /^win_\d+$/.test(tty);
 }
+
+/**
+ * Extract process ID from Windows TTY identifier
+ * Returns undefined if the format is invalid
+ */
+export function extractPidFromWindowsTtyId(tty: string): number | undefined {
+  const match = tty.match(/^win_(\d+)$/);
+  return match ? parseInt(match[1], 10) : undefined;
+}
