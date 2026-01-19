@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { homedir } from 'node:os';
 import { Command } from 'commander';
 import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
 import { isHooksConfigured, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
+import { generateWindowsTtyId } from '../utils/platform.js';
 import { getStatusDisplay } from '../utils/status.js';
 
 const require = createRequire(import.meta.url);
@@ -17,33 +18,11 @@ const ENTER_ALT_SCREEN = '\x1b[?1049h\x1b[H';
 const EXIT_ALT_SCREEN = '\x1b[?1049l';
 
 /**
- * Get TTY from ancestor processes
+ * Get TTY identifier for Windows
+ * Uses process ID based identifier since Windows doesn't have /dev/tty
  */
-const MAX_ANCESTOR_DEPTH = 5;
-
-function getTtyFromAncestors(): string | undefined {
-  try {
-    let currentPid = process.ppid;
-    for (let i = 0; i < MAX_ANCESTOR_DEPTH; i++) {
-      const ttyName = execFileSync('ps', ['-o', 'tty=', '-p', String(currentPid)], {
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      }).trim();
-      const isValidTty = ttyName && ttyName !== '??' && ttyName !== '';
-      if (isValidTty) {
-        return `/dev/${ttyName}`;
-      }
-      const ppid = execFileSync('ps', ['-o', 'ppid=', '-p', String(currentPid)], {
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      }).trim();
-      if (!ppid) break;
-      currentPid = parseInt(ppid, 10);
-    }
-  } catch {
-    // TTY取得失敗は正常（バックグラウンド実行時など）
-  }
-  return undefined;
+function getWindowsTtyId(): string {
+  return generateWindowsTtyId();
 }
 
 /**
@@ -63,7 +42,7 @@ const program = new Command();
 
 program
   .name('ccm')
-  .description('Claude Code Monitor - CLI-based session monitoring')
+  .description('Claude Code Monitor - CLI-based session monitoring (Windows)')
   .version(pkg.version);
 
 program
@@ -79,7 +58,7 @@ program
   .description('Handle a hook event from Claude Code (internal use)')
   .action(async (event: string) => {
     try {
-      const tty = getTtyFromAncestors();
+      const tty = getWindowsTtyId();
       await handleHookEvent(event, tty);
     } catch (e) {
       console.error('Hook error:', e);
@@ -97,8 +76,11 @@ program
       console.log('No active sessions');
       return;
     }
+    const home = homedir();
+    // Escape backslashes for Windows paths in regex
+    const homeRegex = new RegExp(`^${home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
     for (const session of sessions) {
-      const cwd = session.cwd.replace(/^\/Users\/[^/]+/, '~');
+      const cwd = session.cwd.replace(homeRegex, '~');
       const { symbol } = getStatusDisplay(session.status);
       console.log(`${symbol} ${cwd}`);
     }

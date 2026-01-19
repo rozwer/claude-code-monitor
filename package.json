@@ -57,7 +57,7 @@
     "node": ">=18.0.0"
   },
   "os": [
-    "darwin"
+    "win32"
   ],
   "dependencies": {
     "chokidar": "^4.0.3",

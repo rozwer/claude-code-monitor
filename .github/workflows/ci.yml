@@ -9,7 +9,7 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: macos-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -27,7 +27,7 @@ jobs:
 
   typecheck:
     name: Type Check
-    runs-on: macos-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -45,7 +45,7 @@ jobs:
 
   test:
     name: Test (Node ${{ matrix.node-version }})
-    runs-on: macos-latest
+    runs-on: windows-latest
     strategy:
       matrix:
         node-version: [18, 20, 22]
@@ -79,7 +79,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: macos-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -97,6 +97,7 @@ jobs:
 
       - name: Verify dist files
         run: |
-          test -f dist/bin/ccm.js
-          test -f dist/index.js
-          test -f dist/index.d.ts
+          if (!(Test-Path dist/bin/ccm.js)) { exit 1 }
+          if (!(Test-Path dist/index.js)) { exit 1 }
+          if (!(Test-Path dist/index.d.ts)) { exit 1 }
+        shell: pwsh

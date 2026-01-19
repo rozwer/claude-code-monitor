@@ -1,14 +1,12 @@
-# Claude Code Monitor CLI
+# Claude Code Monitor CLI (Windows)
 
 [![npm version](https://img.shields.io/npm/v/claude-code-monitor.svg)](https://www.npmjs.com/package/claude-code-monitor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
+[![Windows](https://img.shields.io/badge/platform-Windows-blue.svg)](https://www.microsoft.com/windows)
 
 **A CLI tool to monitor multiple Claude Code sessions in real-time from your terminal.**
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/onikan27/claude-code-monitor/main/docs/ccm-demo.gif" alt="Claude Code Monitor Demo" width="1000">
-</p>
+> **Note**: This is the Windows-native version. For macOS, see the [original repository](https://github.com/onikan27/claude-code-monitor).
 
 ---
 
@@ -36,17 +34,16 @@
 
 - 🔌 **Serverless** - File-based session state management (no API server required)
 - 🔄 **Real-time** - Auto-updates on file changes
-- 🎯 **Tab Focus** - Instantly switch to the terminal tab of a selected session
 - 🎨 **Simple UI** - Displays only status and directory
 - ⚡ **Easy Setup** - One command `ccm` for automatic setup and launch
+
+> **Note**: Terminal focus feature is not available on Windows.
 
 ---
 
 ## 📋 Requirements
 
-> **Note**: This tool is **macOS only** due to its use of AppleScript for terminal focus features.
-
-- **macOS** (focus feature is macOS only)
+- **Windows 10/11**
 - **Node.js** >= 18.0.0
 - **Claude Code** installed
 
@@ -56,13 +53,13 @@
 
 ### Global install (Recommended)
 
-```bash
+```powershell
 npm install -g claude-code-monitor
 ```
 
 ### Run with npx (no install required)
 
-```bash
+```powershell
 npx claude-code-monitor
 ```
 
@@ -72,7 +69,7 @@ npx claude-code-monitor
 
 ## ⚡ Quick Start
 
-```bash
+```powershell
 ccm
 ```
 
@@ -100,10 +97,11 @@ On first run, it automatically sets up hooks and launches the monitor.
 |-----|--------|
 | `↑` / `k` | Move up |
 | `↓` / `j` | Move down |
-| `Enter` / `f` | Focus selected session |
-| `1-9` | Quick select & focus by number |
+| `1-9` | Quick select by number |
 | `c` | Clear all sessions |
 | `q` / `Esc` | Quit |
+
+> **Note**: Focus feature (Enter/f) is not available on Windows.
 
 ---
 
@@ -119,15 +117,17 @@ On first run, it automatically sets up hooks and launches the monitor.
 
 ## 🖥️ Supported Terminals
 
-Focus feature works with the following terminals:
+All Windows terminals are supported for monitoring:
 
-| Terminal | Focus Support | Notes |
-|----------|--------------|-------|
-| iTerm2 | ✅ Full | TTY-based window/tab targeting |
-| Terminal.app | ✅ Full | TTY-based window/tab targeting |
-| Ghostty | ⚠️ Limited | Activates app only (cannot target specific window/tab) |
+| Terminal | Monitoring |
+|----------|-----------|
+| Windows Terminal | ✅ |
+| PowerShell | ✅ |
+| Command Prompt | ✅ |
+| ConEmu | ✅ |
+| Cmder | ✅ |
 
-> **Note**: Other terminals (Alacritty, kitty, Warp, etc.) can use monitoring but focus feature is not supported.
+> **Note**: Terminal focus feature is not available on Windows. You can monitor sessions but cannot auto-switch to specific terminal windows.
 
 ---
 
@@ -141,7 +141,7 @@ Session data is stored in `~/.claude-monitor/sessions.json`.
 |-------|-------------|
 | `session_id` | Claude Code session identifier |
 | `cwd` | Working directory path |
-| `tty` | Terminal device path (e.g., `/dev/ttys001`) |
+| `tty` | Session identifier (e.g., `win_1234`) |
 | `status` | Session status (running/waiting_input/stopped) |
 | `updated_at` | Last update timestamp |
 
@@ -173,23 +173,17 @@ for (const session of sessions) {
 2. Check if `~/.claude/settings.json` contains hook settings
 3. Restart Claude Code
 
-```bash
+```powershell
 # Check configuration
-cat ~/.claude/settings.json | grep ccm
+type %USERPROFILE%\.claude\settings.json | findstr ccm
 ```
-
-### Focus not working
-
-1. Verify you're using macOS
-2. Verify you're using iTerm2, Terminal.app, or Ghostty
-3. Check System Preferences > Privacy & Security > Accessibility permissions
 
 ### Reset session data
 
-```bash
+```powershell
 ccm clear
 # or
-rm ~/.claude-monitor/sessions.json
+del %USERPROFILE%\.claude-monitor\sessions.json
 ```
 
 ---
@@ -197,7 +191,6 @@ rm ~/.claude-monitor/sessions.json
 ## 🔒 Security
 
 - This tool modifies `~/.claude/settings.json` to register hooks
-- Focus feature uses AppleScript to control terminal applications
 - All data is stored locally; no network requests are made
 
 ---
