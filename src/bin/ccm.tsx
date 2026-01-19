@@ -7,6 +7,7 @@ import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
 import { isHooksConfigured, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
+import { getConfigPath, readConfig, updateConfig } from '../utils/config.js';
 import { generateWindowsTtyId } from '../utils/platform.js';
 import { getStatusDisplay } from '../utils/status.js';
 
@@ -99,6 +100,30 @@ program
   .description('Setup Claude Code hooks for monitoring')
   .action(async () => {
     await setupHooks();
+  });
+
+program
+  .command('notify')
+  .description('Manage Windows notification settings')
+  .option('--enable', 'Enable notifications')
+  .option('--disable', 'Disable notifications')
+  .option('--status', 'Show current notification settings')
+  .action((options: { enable?: boolean; disable?: boolean; status?: boolean }) => {
+    if (options.enable) {
+      updateConfig({ notifications: { enabled: true, onPermissionPrompt: true, onSessionComplete: true } });
+      console.log('Notifications enabled');
+    } else if (options.disable) {
+      updateConfig({ notifications: { enabled: false, onPermissionPrompt: true, onSessionComplete: true } });
+      console.log('Notifications disabled');
+    } else {
+      // Default: show status
+      const config = readConfig();
+      console.log('Notification Settings:');
+      console.log(`  Enabled: ${config.notifications.enabled ? 'Yes' : 'No'}`);
+      console.log(`  On permission prompt: ${config.notifications.onPermissionPrompt ? 'Yes' : 'No'}`);
+      console.log(`  On session complete: ${config.notifications.onSessionComplete ? 'Yes' : 'No'}`);
+      console.log(`\nConfig file: ${getConfigPath()}`);
+    }
   });
 
 /**
