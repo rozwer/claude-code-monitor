@@ -154,4 +154,56 @@ describe('notify', () => {
       expect(() => notify('session_complete', '/test/path')).not.toThrow();
     });
   });
+
+  describe('focusTerminalWindow', () => {
+    it('is a function that accepts optional targetApp and callback', async () => {
+      const { focusTerminalWindow } = await import('../src/utils/notify.js');
+      expect(typeof focusTerminalWindow).toBe('function');
+
+      // Should not throw
+      expect(() => focusTerminalWindow()).not.toThrow();
+      expect(() => focusTerminalWindow('WindowsTerminal')).not.toThrow();
+      expect(() => focusTerminalWindow(undefined, () => {})).not.toThrow();
+    });
+
+    it('works on win32 platform', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { focusTerminalWindow } = await import('../src/utils/notify.js');
+      // Should not throw
+      focusTerminalWindow();
+
+      // Wait a bit for async operations
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+  });
+
+  describe('sendNotificationWithFocus', () => {
+    it('is a function that accepts title, message, and callback', async () => {
+      const { sendNotificationWithFocus } = await import('../src/utils/notify.js');
+      expect(typeof sendNotificationWithFocus).toBe('function');
+
+      // Should not throw
+      expect(() => sendNotificationWithFocus('Test', 'Message')).not.toThrow();
+    });
+
+    it('works on win32 platform', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { sendNotificationWithFocus } = await import('../src/utils/notify.js');
+      // Should not throw
+      sendNotificationWithFocus('Test Title', 'Test Message');
+
+      // Wait a bit for async operations
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+  });
 });
