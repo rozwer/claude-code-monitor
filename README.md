@@ -3,6 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/claude-code-monitor.svg)](https://www.npmjs.com/package/claude-code-monitor)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
+[![Linux/WSL](https://img.shields.io/badge/platform-Linux%2FWSL-lightgrey.svg)](https://docs.microsoft.com/en-us/windows/wsl/)
 
 **A CLI tool to monitor multiple Claude Code sessions in real-time from your terminal.**
 
@@ -44,11 +45,11 @@
 
 ## 📋 Requirements
 
-> **Note**: This tool is **macOS only** due to its use of AppleScript for terminal focus features.
-
-- **macOS** (focus feature is macOS only)
+- **macOS** or **Linux/WSL**
 - **Node.js** >= 18.0.0
 - **Claude Code** installed
+
+> **Note**: The terminal focus feature (pressing Enter to switch to a session's terminal) is **macOS only** due to its use of AppleScript. On Linux/WSL, all monitoring features work normally, but the focus feature is not available.
 
 ---
 
@@ -119,6 +120,8 @@ On first run, it automatically sets up hooks and launches the monitor.
 
 ## 🖥️ Supported Terminals
 
+### macOS (Full Support)
+
 Focus feature works with the following terminals:
 
 | Terminal | Focus Support | Notes |
@@ -128,6 +131,18 @@ Focus feature works with the following terminals:
 | Ghostty | ⚠️ Limited | Activates app only (cannot target specific window/tab) |
 
 > **Note**: Other terminals (Alacritty, kitty, Warp, etc.) can use monitoring but focus feature is not supported.
+
+### Linux/WSL (Monitoring Only)
+
+All terminals are supported for **monitoring** features. Focus feature is not available on Linux/WSL.
+
+| Terminal | Monitoring | Focus |
+|----------|-----------|-------|
+| Windows Terminal | ✅ | ❌ |
+| GNOME Terminal | ✅ | ❌ |
+| Konsole | ✅ | ❌ |
+| Alacritty | ✅ | ❌ |
+| kitty | ✅ | ❌ |
 
 ---
 
@@ -180,8 +195,8 @@ cat ~/.claude/settings.json | grep ccm
 
 ### Focus not working
 
-1. Verify you're using macOS
-2. Verify you're using iTerm2, Terminal.app, or Ghostty
+1. Focus feature is **macOS only** - on Linux/WSL, this feature is not available
+2. On macOS, verify you're using iTerm2, Terminal.app, or Ghostty
 3. Check System Preferences > Privacy & Security > Accessibility permissions
 
 ### Reset session data

@@ -1,3 +1,4 @@
+import { homedir } from 'node:os';
 import { Box, Text } from 'ink';
 import type React from 'react';
 import { memo } from 'react';
@@ -12,9 +13,12 @@ interface SessionCardProps {
   isSelected: boolean;
 }
 
+const HOME_DIR = homedir();
+const HOME_REGEX = new RegExp(`^${HOME_DIR.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
+
 function abbreviateHomePath(path: string | undefined): string {
   if (!path) return '(unknown)';
-  return path.replace(/^\/Users\/[^/]+/, '~');
+  return path.replace(HOME_REGEX, '~');
 }
 
 export const SessionCard = memo(function SessionCard({

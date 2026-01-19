@@ -47,9 +47,17 @@ export function hasCcmHookForEvent(entries: HookEntry[] | undefined, eventName: 
  * Check if ccm command is in PATH and return the appropriate command
  */
 function getCcmCommand(): string {
-  const result = spawnSync('which', ['ccm'], { encoding: 'utf-8' });
-  if (result.status === 0) {
-    return 'ccm';
+  const whichCmd = process.platform === 'win32' ? 'where' : 'which';
+  try {
+    const result = spawnSync(whichCmd, ['ccm'], {
+      encoding: 'utf-8',
+      stdio: ['pipe', 'pipe', 'ignore'],
+    });
+    if (result.status === 0) {
+      return 'ccm';
+    }
+  } catch {
+    // Command not found, fall back to npx
   }
   return `npx ${PACKAGE_NAME}`;
 }

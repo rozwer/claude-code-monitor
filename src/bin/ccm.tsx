@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { homedir } from 'node:os';
 import { Command } from 'commander';
 import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
@@ -97,8 +98,10 @@ program
       console.log('No active sessions');
       return;
     }
+    const home = homedir();
+    const homeRegex = new RegExp(`^${home.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`);
     for (const session of sessions) {
-      const cwd = session.cwd.replace(/^\/Users\/[^/]+/, '~');
+      const cwd = session.cwd.replace(homeRegex, '~');
       const { symbol } = getStatusDisplay(session.status);
       console.log(`${symbol} ${cwd}`);
     }
