@@ -37,14 +37,15 @@ exports.SessionWatcher = void 0;
 const fs = __importStar(require("node:fs"));
 const os = __importStar(require("node:os"));
 const path = __importStar(require("node:path"));
-const chokidar_1 = require("chokidar");
 /**
  * Watches the session store file for changes
  */
 class SessionWatcher {
     watcher = null;
+    pollInterval = null;
     storePath;
     previousSessions = new Map();
+    previousContent = '';
     onSessionsChange;
     onPermissionRequired;
     constructor(onSessionsChange, onPermissionRequired) {
@@ -58,23 +59,40 @@ class SessionWatcher {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
+        // Create empty file if not exists
+        if (!fs.existsSync(this.storePath)) {
+            fs.writeFileSync(this.storePath, JSON.stringify({ sessions: {}, last_updated: Date.now() }));
+        }
         // Initialize with current state
         this.loadSessions();
-        // Watch for changes
-        this.watcher = (0, chokidar_1.watch)(this.storePath, {
-            persistent: true,
-            ignoreInitial: true,
-        });
-        this.watcher.on('change', () => {
-            this.loadSessions();
-        });
-        this.watcher.on('add', () => {
-            this.loadSessions();
-        });
+        // Use polling for reliable cross-platform support (WSL, etc.)
+        // Poll every 2 seconds
+        this.pollInterval = setInterval(() => {
+            this.checkForChanges();
+        }, 2000);
     }
     stop() {
         this.watcher?.close();
         this.watcher = null;
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+            this.pollInterval = null;
+        }
+    }
+    checkForChanges() {
+        try {
+            if (!fs.existsSync(this.storePath)) {
+                return;
+            }
+            const content = fs.readFileSync(this.storePath, 'utf-8');
+            if (content !== this.previousContent) {
+                this.previousContent = content;
+                this.loadSessions();
+            }
+        }
+        catch {
+            // Ignore errors
+        }
     }
     loadSessions() {
         try {
