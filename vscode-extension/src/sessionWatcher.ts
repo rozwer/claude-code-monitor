@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { watch, type FSWatcher } from 'chokidar';
 
 export interface Session {
   session_id: string;
@@ -24,9 +23,11 @@ type PermissionCallback = (session: Session) => void;
  * Watches the session store file for changes
  */
 export class SessionWatcher {
-  private watcher: FSWatcher | null = null;
+  private watcher: fs.FSWatcher | null = null;
+  private pollInterval: NodeJS.Timeout | null = null;
   private storePath: string;
   private previousSessions: Map<string, Session> = new Map();
+  private previousContent: string = '';
   private onSessionsChange: SessionsCallback;
   private onPermissionRequired: PermissionCallback;
 
@@ -46,27 +47,43 @@ export class SessionWatcher {
       fs.mkdirSync(dir, { recursive: true });
     }
 
+    // Create empty file if not exists
+    if (!fs.existsSync(this.storePath)) {
+      fs.writeFileSync(this.storePath, JSON.stringify({ sessions: {}, last_updated: Date.now() }));
+    }
+
     // Initialize with current state
     this.loadSessions();
 
-    // Watch for changes
-    this.watcher = watch(this.storePath, {
-      persistent: true,
-      ignoreInitial: true,
-    });
-
-    this.watcher.on('change', () => {
-      this.loadSessions();
-    });
-
-    this.watcher.on('add', () => {
-      this.loadSessions();
-    });
+    // Use polling for reliable cross-platform support (WSL, etc.)
+    // Poll every 2 seconds
+    this.pollInterval = setInterval(() => {
+      this.checkForChanges();
+    }, 2000);
   }
 
   stop(): void {
     this.watcher?.close();
     this.watcher = null;
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+  }
+
+  private checkForChanges(): void {
+    try {
+      if (!fs.existsSync(this.storePath)) {
+        return;
+      }
+      const content = fs.readFileSync(this.storePath, 'utf-8');
+      if (content !== this.previousContent) {
+        this.previousContent = content;
+        this.loadSessions();
+      }
+    } catch {
+      // Ignore errors
+    }
   }
 
   private loadSessions(): void {

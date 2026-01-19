@@ -2,7 +2,7 @@
   "name": "claude-code-monitor",
   "displayName": "Claude Code Monitor",
   "description": "Monitor multiple Claude Code sessions with terminal focus support",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "publisher": "claude-code-monitor",
   "engines": {
     "vscode": "^1.85.0"
@@ -34,7 +34,7 @@
         {
           "id": "claude-code-monitor",
           "title": "Claude Code Monitor",
-          "icon": "$(terminal)"
+          "icon": "resources/icon.svg"
         }
       ]
     },
@@ -76,7 +76,5 @@
     "typescript": "^5.7.0",
     "vitest": "^4.0.0"
   },
-  "dependencies": {
-    "chokidar": "^4.0.0"
-  }
+  "dependencies": {}
 }
