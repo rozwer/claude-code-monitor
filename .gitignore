@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# Claude Code local state
+.claude/
+.claude.backup.*/
 # Build outputs
 dist/
 

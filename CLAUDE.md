@@ -23,7 +23,7 @@ npm run typecheck     # 型チェックのみ
 
 ## Architecture
 
-Claude Codeの複数セッションをリアルタイム監視するmacOS専用CLIツール。Ink（React for CLI）を使用したTUIとファイルベースの状態管理で動作する。
+Claude Codeの複数セッションをリアルタイム監視するCLIツール。Ink（React for CLI）を使用したTUIとファイルベースの状態管理で動作する。
 
 ### データフロー
 
@@ -33,39 +33,45 @@ Claude Codeの複数セッションをリアルタイム監視するmacOS専用C
 
 ### ディレクトリ構成
 
-- `src/bin/ccm.tsx` - CLIエントリーポイント（Commanderでコマンド定義）
-- `src/hook/handler.ts` - フックイベント処理（stdin読み取り→状態更新）
-- `src/store/file-store.ts` - セッション状態の永続化（JSON読み書き、タイムアウト管理）
-- `src/setup/index.ts` - `~/.claude/settings.json` へのフック自動設定
+- `src/bin/ccm.tsx` - CLIエントリーポイント
+- `src/hook/handler.ts` - フックイベント処理
+- `src/store/file-store.ts` - セッション状態の永続化
 - `src/components/` - InkベースのReactコンポーネント
 - `src/hooks/useSessions.ts` - ファイル変更監視付きのReactフック
-- `src/utils/focus.ts` - AppleScriptによるターミナルフォーカス機能
-- `src/types/index.ts` - 型定義（HookEvent, Session, SessionStatus, StoreData）
+- `src/types/index.ts` - 型定義
 
 ### 技術スタック
 
 - **UI**: Ink v5 + React 18
 - **CLI**: Commander
 - **ファイル監視**: chokidar
-- **ターミナル制御**: AppleScript（iTerm2, Terminal.app, Ghostty対応）
 - **テスト**: Vitest
 - **リント/フォーマット**: Biome
 
 ### セッション管理
 
-セッションは`session_id:tty`の形式でキー管理される。同一TTYに新しいセッションが開始されると、古いセッションは自動削除される。
+セッションは`session_id:tty`の形式でキー管理。30分でタイムアウト。
 
-**状態遷移**:
-- `running`: ツール実行中（PreToolUse, UserPromptSubmitで遷移）
-- `waiting_input`: 権限許可などの入力待ち（Notification + permission_promptで遷移）
-- `stopped`: セッション終了（Stopで遷移）
+**状態遷移**: `running` → `waiting_input` → `stopped`
 
-セッションは30分でタイムアウト、またはTTYが存在しなくなると自動削除される。
+## 開発ワークフロー
 
-### ライブラリとしての使用
+1. Plans.md でタスクを管理
+2. `/work` でタスクを実行
+3. `/harness-review` でレビュー
 
-```typescript
-import { getSessions, getStatusDisplay } from 'claude-code-monitor';
-```
+## 禁止事項
 
-`src/index.ts`で公開APIをエクスポートしている。
+- テストを削除・無効化しない
+- 型チェック（`any`）をバイパスしない
+- 空の catch ブロックでエラーを握りつぶさない
+- `.claude/state/` 配下のファイルをコミットしない
+
+## ルール参照
+
+詳細なガイドラインは `.claude/rules/` を参照：
+- `commit-rules.md` - コミット規約
+- `pm-workflow.md` - PM・サブエージェント運用
+- `code-review.md` - レビュー基準・Codex活用
+- `test-quality.md` - テスト品質
+- `implementation-quality.md` - 実装品質
