@@ -53,13 +53,10 @@ describe('file-store', () => {
   });
 
   describe('getSessionKey', () => {
-    it('should return session_id:tty when tty is provided', async () => {
+    it('should return session_id only (ignoring tty)', async () => {
       const { getSessionKey } = await import('../src/store/file-store.js');
-      expect(getSessionKey('abc123', '/dev/ttys001')).toBe('abc123:/dev/ttys001');
-    });
-
-    it('should return session_id only when tty is not provided', async () => {
-      const { getSessionKey } = await import('../src/store/file-store.js');
+      // TTY is no longer part of the key - session_id is always used alone
+      expect(getSessionKey('abc123', '/dev/ttys001')).toBe('abc123');
       expect(getSessionKey('abc123')).toBe('abc123');
       expect(getSessionKey('abc123', undefined)).toBe('abc123');
     });
@@ -155,14 +152,14 @@ describe('file-store', () => {
     it('should remove sessions with same tty but different session_id', async () => {
       const { removeOldSessionsOnSameTty } = await import('../src/store/file-store.js');
       const sessions: Record<string, Session> = {
-        'old:/dev/ttys001': {
+        old: {
           session_id: 'old',
           cwd: '/tmp',
           tty: '/dev/ttys001',
           status: 'running',
           updated_at: new Date().toISOString(),
         },
-        'other:/dev/ttys002': {
+        other: {
           session_id: 'other',
           cwd: '/tmp',
           tty: '/dev/ttys002',
@@ -173,14 +170,14 @@ describe('file-store', () => {
 
       removeOldSessionsOnSameTty(sessions, 'new', '/dev/ttys001');
 
-      expect(sessions['old:/dev/ttys001']).toBeUndefined();
-      expect(sessions['other:/dev/ttys002']).toBeDefined();
+      expect(sessions.old).toBeUndefined();
+      expect(sessions.other).toBeDefined();
     });
 
     it('should not remove session with same session_id', async () => {
       const { removeOldSessionsOnSameTty } = await import('../src/store/file-store.js');
       const sessions: Record<string, Session> = {
-        'same:/dev/ttys001': {
+        same: {
           session_id: 'same',
           cwd: '/tmp',
           tty: '/dev/ttys001',
@@ -191,7 +188,7 @@ describe('file-store', () => {
 
       removeOldSessionsOnSameTty(sessions, 'same', '/dev/ttys001');
 
-      expect(sessions['same:/dev/ttys001']).toBeDefined();
+      expect(sessions.same).toBeDefined();
     });
   });
 
@@ -208,7 +205,7 @@ describe('file-store', () => {
       const { readStore, writeStore } = await import('../src/store/file-store.js');
       const testData: StoreData = {
         sessions: {
-          'test:/dev/ttys001': {
+          test: {
             session_id: 'test',
             cwd: '/tmp',
             tty: '/dev/ttys001',
@@ -222,8 +219,8 @@ describe('file-store', () => {
       writeStore(testData);
       const readData = readStore();
 
-      expect(readData.sessions['test:/dev/ttys001']).toBeDefined();
-      expect(readData.sessions['test:/dev/ttys001'].session_id).toBe('test');
+      expect(readData.sessions.test).toBeDefined();
+      expect(readData.sessions.test.session_id).toBe('test');
     });
 
     it('should return empty store data when file contains invalid JSON', async () => {
@@ -293,7 +290,7 @@ describe('file-store', () => {
 
       writeStore({
         sessions: {
-          'old:/dev/ttys001': {
+          old: {
             session_id: 'old',
             cwd: '/tmp',
             tty: '/dev/ttys001',
@@ -301,7 +298,7 @@ describe('file-store', () => {
             created_at: new Date(now - 1000).toISOString(),
             updated_at: new Date(now).toISOString(),
           },
-          'new:/dev/ttys002': {
+          new: {
             session_id: 'new',
             cwd: '/tmp',
             tty: '/dev/ttys002',
@@ -327,14 +324,14 @@ describe('file-store', () => {
 
       writeStore({
         sessions: {
-          'expired:/dev/ttys001': {
+          expired: {
             session_id: 'expired',
             cwd: '/tmp',
             tty: '/dev/ttys001',
             status: 'running',
             updated_at: new Date(thirtyOneMinutesAgo).toISOString(),
           },
-          'active:/dev/ttys002': {
+          active: {
             session_id: 'active',
             cwd: '/tmp',
             tty: '/dev/ttys002',
@@ -425,7 +422,7 @@ describe('file-store', () => {
 
       const testData = {
         sessions: {
-          'test:/dev/pts/1': {
+          'test-pts1': {
             session_id: 'test',
             cwd: '/tmp',
             tty: '/dev/pts/1',
@@ -442,7 +439,7 @@ describe('file-store', () => {
       // Reset cache to force read from file
       resetStoreCache();
       const data = readStore();
-      expect(data.sessions['test:/dev/pts/1']).toBeDefined();
+      expect(data.sessions['test-pts1']).toBeDefined();
     });
   });
 
@@ -453,7 +450,7 @@ describe('file-store', () => {
 
       const testData = {
         sessions: {
-          'test:/dev/pts/1': {
+          'test-pts1': {
             session_id: 'test',
             cwd: '/tmp',
             tty: '/dev/pts/1',
@@ -473,7 +470,7 @@ describe('file-store', () => {
 
       // Data should not be written since we reset the cache
       const data = readStore();
-      expect(data.sessions['test:/dev/pts/1']).toBeUndefined();
+      expect(data.sessions['test-pts1']).toBeUndefined();
     });
 
     it('should clear cached data', async () => {

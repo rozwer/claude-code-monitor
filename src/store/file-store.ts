@@ -92,8 +92,13 @@ export function resetStoreCache(): void {
 }
 
 /** @internal */
-export function getSessionKey(sessionId: string, tty?: string): string {
-  return tty ? `${sessionId}:${tty}` : sessionId;
+export function getSessionKey(sessionId: string, _tty?: string): string {
+  // Use session_id only as key for uniqueness
+  // TTY is stored as a field for focus functionality but not used in key
+  // This allows:
+  // 1. Multiple sessions on same TTY (e.g., after /clear)
+  // 2. VSCode extension support (no TTY available)
+  return sessionId;
 }
 
 /** @internal */

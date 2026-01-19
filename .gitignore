@@ -33,3 +33,7 @@ npm-debug.log*
 *.tmp
 *.temp
 .cache/
+
+# Development planning files
+Plans.md
+AGENTS.md
