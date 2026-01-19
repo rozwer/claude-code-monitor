@@ -20,6 +20,7 @@
 - [⌨️ Keybindings](#️-keybindings-watch-mode)
 - [🎨 Status Icons](#-status-icons)
 - [🖥️ Supported Terminals](#️-supported-terminals)
+- [🔔 Windows Notifications](#-windows-notifications-windowswsl-only)
 - [💾 Data Storage](#-data-storage)
 - [📦 Programmatic Usage](#-programmatic-usage)
 - [🔧 Troubleshooting](#-troubleshooting)
@@ -86,6 +87,7 @@ On first run, it automatically sets up hooks and launches the monitor.
 | `ccm setup` | - | Configure Claude Code hooks |
 | `ccm list` | `ccm ls` | List sessions |
 | `ccm clear` | - | Clear all sessions |
+| `ccm notify` | - | Manage notification settings (Windows/WSL only) |
 | `ccm --version` | `ccm -V` | Show version |
 | `ccm --help` | `ccm -h` | Show help |
 
@@ -128,6 +130,39 @@ All Windows terminals are supported for monitoring:
 | Cmder | ✅ |
 
 > **Note**: Terminal focus feature is not available on Windows. You can monitor sessions but cannot auto-switch to specific terminal windows.
+
+---
+
+## 🔔 Windows Notifications (Windows/WSL only)
+
+On Windows and WSL, you can enable desktop notifications for important events.
+
+### Enable notifications
+
+```bash
+ccm notify --enable
+```
+
+### Disable notifications
+
+```bash
+ccm notify --disable
+```
+
+### Check current settings
+
+```bash
+ccm notify
+```
+
+### Notification triggers
+
+| Event | Description |
+|-------|-------------|
+| Permission prompt | When Claude Code asks for permission |
+| Session complete | When a session finishes |
+
+> **Note**: Notifications use Windows Toast notifications via PowerShell. BurntToast module is used if available, otherwise falls back to system notifications.
 
 ---
 
