@@ -131,18 +131,26 @@ program
   .option('--status', 'Show current notification settings')
   .action((options: { enable?: boolean; disable?: boolean; status?: boolean }) => {
     if (options.enable) {
-      updateConfig({ notifications: { enabled: true, onPermissionPrompt: true, onSessionComplete: true } });
+      updateConfig({
+        notifications: { enabled: true, onPermissionPrompt: true, onSessionComplete: true },
+      });
       console.log('Notifications enabled');
     } else if (options.disable) {
-      updateConfig({ notifications: { enabled: false, onPermissionPrompt: true, onSessionComplete: true } });
+      updateConfig({
+        notifications: { enabled: false, onPermissionPrompt: true, onSessionComplete: true },
+      });
       console.log('Notifications disabled');
     } else {
       // Default: show status
       const config = readConfig();
       console.log('Notification Settings:');
       console.log(`  Enabled: ${config.notifications.enabled ? 'Yes' : 'No'}`);
-      console.log(`  On permission prompt: ${config.notifications.onPermissionPrompt ? 'Yes' : 'No'}`);
-      console.log(`  On session complete: ${config.notifications.onSessionComplete ? 'Yes' : 'No'}`);
+      console.log(
+        `  On permission prompt: ${config.notifications.onPermissionPrompt ? 'Yes' : 'No'}`
+      );
+      console.log(
+        `  On session complete: ${config.notifications.onSessionComplete ? 'Yes' : 'No'}`
+      );
       console.log(`\nConfig file: ${getConfigPath()}`);
     }
   });
