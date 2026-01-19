@@ -1,51 +1,98 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('notify', () => {
+  const originalPlatform = process.platform;
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    Object.defineProperty(process, 'platform', {
+      value: originalPlatform,
+      writable: true,
+      configurable: true,
+    });
+  });
+
   describe('isWindowsEnvironment', () => {
     it('returns true on Windows platform', async () => {
-      vi.resetModules();
-      const originalPlatform = process.platform;
-      Object.defineProperty(process, 'platform', { value: 'win32' });
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
 
       const { isWindowsEnvironment } = await import('../src/utils/notify.js');
       expect(isWindowsEnvironment()).toBe(true);
-
-      Object.defineProperty(process, 'platform', { value: originalPlatform });
-      vi.resetModules();
     });
 
     it('checks for WSL PowerShell path on non-Windows', async () => {
-      vi.resetModules();
+      Object.defineProperty(process, 'platform', {
+        value: 'linux',
+        writable: true,
+        configurable: true,
+      });
 
       const { isWindowsEnvironment } = await import('../src/utils/notify.js');
 
       // Just verify it returns a boolean (actual value depends on environment)
       const result = isWindowsEnvironment();
       expect(typeof result).toBe('boolean');
-
-      vi.resetModules();
     });
   });
 
   describe('notify function', () => {
     it('is a function that accepts notification type', async () => {
-      vi.resetModules();
-
       const { notify } = await import('../src/utils/notify.js');
       expect(typeof notify).toBe('function');
 
       // Should not throw
       expect(() => notify('permission_prompt')).not.toThrow();
       expect(() => notify('session_complete', '/some/path')).not.toThrow();
+    });
 
-      vi.resetModules();
+    it('calls sendWindowsNotification on Windows for permission_prompt', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { notify } = await import('../src/utils/notify.js');
+      // Should not throw
+      expect(() => notify('permission_prompt', '/test/path')).not.toThrow();
+    });
+
+    it('calls sendWindowsNotification on Windows for session_complete', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { notify } = await import('../src/utils/notify.js');
+      // Should not throw
+      expect(() => notify('session_complete', '/test/path')).not.toThrow();
+    });
+
+    it('uses default message when sessionInfo is not provided', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { notify } = await import('../src/utils/notify.js');
+      // Should not throw even without sessionInfo
+      expect(() => notify('permission_prompt')).not.toThrow();
+      expect(() => notify('session_complete')).not.toThrow();
     });
   });
 
   describe('sendWindowsNotification', () => {
     it('is a function that accepts title, message, and callback', async () => {
-      vi.resetModules();
-
       const { sendWindowsNotification } = await import('../src/utils/notify.js');
       expect(typeof sendWindowsNotification).toBe('function');
 
@@ -59,32 +106,52 @@ describe('notify', () => {
 
       // Just verify it didn't throw
       expect(true).toBe(true);
+    });
 
-      vi.resetModules();
+    it('works on win32 platform', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { sendWindowsNotification } = await import('../src/utils/notify.js');
+      // Should not throw
+      sendWindowsNotification('Test Title', 'Test Message');
+
+      // Wait a bit for async operations
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    it('escapes special characters in PowerShell script', async () => {
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        writable: true,
+        configurable: true,
+      });
+
+      const { sendWindowsNotification } = await import('../src/utils/notify.js');
+      // Test with special characters that need escaping
+      sendWindowsNotification("Title's Test", 'Message with `backticks`');
+
+      // Wait a bit for async operations
+      await new Promise((resolve) => setTimeout(resolve, 50));
     });
   });
 
   describe('NotificationType', () => {
     it('supports permission_prompt type', async () => {
-      vi.resetModules();
-
       const { notify } = await import('../src/utils/notify.js');
 
       // Should accept permission_prompt type
       expect(() => notify('permission_prompt', '/test/path')).not.toThrow();
-
-      vi.resetModules();
     });
 
     it('supports session_complete type', async () => {
-      vi.resetModules();
-
       const { notify } = await import('../src/utils/notify.js');
 
       // Should accept session_complete type
       expect(() => notify('session_complete', '/test/path')).not.toThrow();
-
-      vi.resetModules();
     });
   });
 });

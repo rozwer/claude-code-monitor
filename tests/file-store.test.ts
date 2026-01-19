@@ -407,4 +407,101 @@ describe('file-store', () => {
       expect(path).toContain('.claude-monitor');
     });
   });
+
+  describe('flushPendingWrites', () => {
+    it('should do nothing when no pending writes', async () => {
+      const { flushPendingWrites, resetStoreCache } = await import('../src/store/file-store.js');
+      resetStoreCache();
+
+      // Should not throw when there are no pending writes
+      expect(() => flushPendingWrites()).not.toThrow();
+    });
+
+    it('should flush pending data immediately', async () => {
+      const { writeStore, flushPendingWrites, readStore, resetStoreCache } = await import(
+        '../src/store/file-store.js'
+      );
+      resetStoreCache();
+
+      const testData = {
+        sessions: {
+          'test:/dev/pts/1': {
+            session_id: 'test',
+            cwd: '/tmp',
+            tty: '/dev/pts/1',
+            status: 'running' as const,
+            updated_at: new Date().toISOString(),
+          },
+        },
+        updated_at: new Date().toISOString(),
+      };
+
+      writeStore(testData);
+      flushPendingWrites();
+
+      // Reset cache to force read from file
+      resetStoreCache();
+      const data = readStore();
+      expect(data.sessions['test:/dev/pts/1']).toBeDefined();
+    });
+  });
+
+  describe('resetStoreCache', () => {
+    it('should cancel pending writes', async () => {
+      const { writeStore, resetStoreCache, readStore } = await import('../src/store/file-store.js');
+      resetStoreCache();
+
+      const testData = {
+        sessions: {
+          'test:/dev/pts/1': {
+            session_id: 'test',
+            cwd: '/tmp',
+            tty: '/dev/pts/1',
+            status: 'running' as const,
+            updated_at: new Date().toISOString(),
+          },
+        },
+        updated_at: new Date().toISOString(),
+      };
+
+      writeStore(testData);
+      // Reset before debounce timer fires
+      resetStoreCache();
+
+      // Wait for debounce time to pass
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      // Data should not be written since we reset the cache
+      const data = readStore();
+      expect(data.sessions['test:/dev/pts/1']).toBeUndefined();
+    });
+
+    it('should clear cached data', async () => {
+      const { writeStore, resetStoreCache, readStore } = await import('../src/store/file-store.js');
+      resetStoreCache();
+
+      const testData = {
+        sessions: {},
+        updated_at: new Date().toISOString(),
+      };
+
+      writeStore(testData);
+      resetStoreCache();
+
+      // After reset, reading should return empty store (not cached data)
+      const data = readStore();
+      expect(data.sessions).toEqual({});
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle flushPendingWrites when no write timer exists', async () => {
+      const { flushPendingWrites, resetStoreCache } = await import('../src/store/file-store.js');
+      resetStoreCache();
+
+      // Call flushPendingWrites when there's no pending write
+      // This tests the writeTimer null check path
+      expect(() => flushPendingWrites()).not.toThrow();
+    });
+  });
 });
