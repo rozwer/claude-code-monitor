@@ -134,6 +134,41 @@ node dist/bin/ccm.js watch
 |---|----------|--------|
 | 7.1 | Enter/f キー | 何も起きない（WSLでは非対応） |
 
+### 8. 通知機能（Windows/WSL専用）
+
+```bash
+# 通知設定を確認
+node dist/bin/ccm.js notify
+```
+
+| # | テスト | コマンド | 期待結果 |
+|---|--------|----------|----------|
+| 8.1 | 設定確認 | `node dist/bin/ccm.js notify` | 現在の設定が表示される |
+| 8.2 | 有効化 | `node dist/bin/ccm.js notify --enable` | `Notifications enabled` |
+| 8.3 | 設定確認 | `node dist/bin/ccm.js notify` | `Enabled: Yes` |
+| 8.4 | 設定ファイル | `cat ~/.claude-monitor/config.json` | `"enabled": true` が含まれる |
+| 8.5 | 無効化 | `node dist/bin/ccm.js notify --disable` | `Notifications disabled` |
+
+#### 通知テスト（有効化時）
+
+```bash
+# 通知を有効化
+node dist/bin/ccm.js notify --enable
+
+# permission_prompt で通知が出るかテスト
+echo '{"session_id":"notify-test","cwd":"/tmp","notification_type":"permission_prompt"}' | node dist/bin/ccm.js hook Notification
+```
+
+| # | 確認項目 | 期待値 |
+|---|----------|--------|
+| 8.6 | Toast 通知 | Windows デスクトップに通知が表示される |
+| 8.7 | 通知タイトル | `Claude Code - Permission Required` |
+
+```bash
+# テスト後は無効化
+node dist/bin/ccm.js notify --disable
+```
+
 ---
 
 ## トラブルシューティング
@@ -186,3 +221,4 @@ npm unlink
 - [ ] 5.1〜5.5: TUI が正しく動作する
 - [ ] 6.1〜6.3: 実際の Claude Code と連携できる
 - [ ] 7.1: フォーカス機能は無効（想定通り）
+- [ ] 8.1〜8.7: 通知機能が動作する
